@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 import org.bukkit.entity.Player;
 
-public class variables {
+public class Variables {
     public static HashMap<String,ArrayList<Integer>> verteilung;
 
     public static HashMap<Player,String> PlayerID;

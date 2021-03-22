@@ -46,10 +46,10 @@ public class GUI implements Listener{
 
         String guiName;
 
-        if(variables.guiTypeToName().get(GUItype)== null) {
+        if(Variables.guiTypeToName().get(GUItype)== null) {
             guiName = "Error";
         } else {
-            guiName = variables.guiTypeToName().get(GUItype);
+            guiName = Variables.guiTypeToName().get(GUItype);
         }
         
         switch(GUItype) {
@@ -103,7 +103,7 @@ public class GUI implements Listener{
     }
 
     public static void setItems(String GUItype, String ID) {
-        setInventory(variables.guiTypeToArray(GUItype, ID));
+        setInventory(Variables.guiTypeToArray(GUItype, ID));
     } public static void setItems(String GUItype) {
         setItems(GUItype, null);
     }
