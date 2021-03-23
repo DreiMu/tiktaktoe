@@ -1,32 +1,43 @@
 package de.dreimu.minecraft.plugins.apis.guiapi;
 
-import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.List;
-
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 public class GUIItemFunction {
-    private String[] getCommandArgs(String command){
-        String[] openGUI = {"player"};
-        String[] closeGUI = {"player"};
-        String[] runFunction = {"player","function"};
-        String[] changeItemsFromList = {"player", "list"};
-        switch(command) {
-            
-            case "openGUI":
-                return openGUI;
-            case "runFunction":
-                return runFunction;
-            case "closeGUI":
-                return closeGUI;
-            case "changeItemsFromList":
-                return changeItemsFromList;
-            default:
-                return null;
-        }
+
+    private String[] functionInfo;
+
+    public GUIItemFunction(String[] functionInfo) throws FunctionDeclarationException {
+        this.functionInfo = functionInfo;
     }
-    public GUIItemFunction(GUIItem item, String function) throws FunctionDeclarationException {
-        throw new FunctionDeclarationException("Couldn't Declare the Function: "+function);
+
+    public void openGUI(Player player) {
+
+        //öffnet die GUI
+        //functionInfo = {"guiID"}
+
+        player.openInventory(GUI.getInventoryFromID(this.functionInfo[0]));
+        
+    } public void closeGUI(Player player) {
+
+        //schließt die GUI
+
+        player.getOpenInventory().close();
+
+    } public void setItem(Inventory inv) {
+
+        //setzt ein Item
+        //functionInfo = {"slot","itemID"}
+
+        inv.setItem(Integer.parseInt(this.functionInfo[0]), GUIItem.idToGuiItem(this.functionInfo[1]).getItemStack());
+
+    } public void setItems(Player player) {
+
+        //setzt alle Items
+        //functionInfo = {"guiAufbauID"}
+
+        player.getOpenInventory().getTopInventory().setContents(GUIAufbau.idToGuiAufbau(functionInfo[0]).getItemStackList());
+
     }
 }

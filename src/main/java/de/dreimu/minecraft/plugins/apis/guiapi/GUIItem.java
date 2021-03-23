@@ -2,17 +2,23 @@ package de.dreimu.minecraft.plugins.apis.guiapi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.event.Listener;
 
 public class GUIItem {
 
     private static ArrayList<String> usedIDs = new ArrayList<String>();
+
+    private static HashMap<String,GUIItem> idToItem = new HashMap<String,GUIItem>();
 
     private String itemID;
     private String itemName;
@@ -22,17 +28,20 @@ public class GUIItem {
     private List<String> itemLore;
     private Material itemMaterial;
     private GUIItemFunction guiItemFunction;
+    private String itemFunction;
+    private String[] itemFunctionInfos;
 
-    public GUIItem(String itemFunction, String itemID, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) throws IDIsAlreadyUsed, FunctionDeclarationException{
-
+    public GUIItem(String itemFunction, String[] itemFunctionInfos, String itemID, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) throws IDIsAlreadyUsed, FunctionDeclarationException{
         try {
             setID(itemID);
         } catch (IDIsAlreadyUsed e) {
             throw new IDIsAlreadyUsed(e.getMessage());
         }
 
+        this.itemFunctionInfos = itemFunctionInfos;
+
         try {
-            this.guiItemFunction = new GUIItemFunction(this, itemFunction);
+            this.guiItemFunction = new GUIItemFunction(itemFunctionInfos);
         } catch (FunctionDeclarationException e) {
             //TODO: handle exception
         }
@@ -93,5 +102,23 @@ public class GUIItem {
 
     public ItemStack getItemStack() {
         return this.generateItem();
+    }
+
+    public static GUIItem idToGuiItem(String ID) {
+        return idToItem.get(ID);
+    }
+
+    public void runFunction(Player player, GUIAufbau guiAufbau, Inventory inv) {
+        switch(this.itemFunction) {
+            case "closeGUI":
+                this.guiItemFunction.closeGUI(player);
+            case "openGUI":
+                this.guiItemFunction.openGUI(player);
+            case "setItem":
+                this.guiItemFunction.setItem(inv);
+            case "setItems":
+                this.guiItemFunction.setItems(player);
+        }
+
     }
 }

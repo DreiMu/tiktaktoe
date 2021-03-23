@@ -2,6 +2,7 @@ package de.dreimu.minecraft.plugins.apis.guiapi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -14,12 +15,14 @@ public class GUI {
     private String GUIID;
     private String GUITitle;
 
+    private static List<GUIItem> items;
+
     public GUI(String GUIName, String GUITitle) {
         this.GUIID = GUIName;
         setGUITitle(GUITitle);
     }
 
-    private static HashMap<String,GUIItem> idToGuiItem = new HashMap<String,GUIItem>();
+    private static HashMap<String,GUI> IDtoGUI = new HashMap<String,GUI>();
 
     private Inventory inventory = Bukkit.createInventory(null, 27);
 
@@ -30,9 +33,11 @@ public class GUI {
             } else {
 
                 try {
+                    IDtoGUI.remove(this.GUIID);
                     usedIDs.remove(this.GUIID);
                 } catch(Exception e) {}
 
+                IDtoGUI.put(this.GUIID, this);
                 usedIDs.add(newGUIID);
                 this.GUIID = newGUIID;
             }
@@ -41,11 +46,10 @@ public class GUI {
         return this.GUIID;
     }
 
-    public static void createGUIItem(String itemFunction, String itemID, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) throws IDIsAlreadyUsed, FunctionDeclarationException {
-        GUIItem item = new GUIItem(itemFunction, itemID, itemName, enchanted, guiItemMaterial, itemLore);
-
-        idToGuiItem.put(itemID, item);
+    public static void createGUIItem(String itemFunction, String[] itemFunctionInfos, String itemID, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) throws IDIsAlreadyUsed, FunctionDeclarationException {
+        items.add(new GUIItem(itemFunction, itemFunctionInfos, itemID, itemName, enchanted, guiItemMaterial, itemLore));
     }
+    
 
     public void setGUITitle(String GUITitle) {
         this.GUITitle = GUITitle;
@@ -58,4 +62,6 @@ public class GUI {
     public Inventory getInventory() {
         return this.inventory;
     }
+
+    public static Inventory getInventoryFromID(String guiID) { return IDtoGUI.get(guiID).inventory; }
 }

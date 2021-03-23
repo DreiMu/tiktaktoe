@@ -1,7 +1,9 @@
 package de.dreimu.minecraft.plugins.apis.guiapi;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.bukkit.inventory.ItemStack;
 
@@ -9,49 +11,70 @@ public class GUIAufbau {
 
     private static ArrayList<String> usedIDs = new ArrayList<String>();
 
-    private ItemStack[] SlotToItem;
+    private static HashMap<String,GUIAufbau> idToGUIAufbau = new HashMap<String,GUIAufbau>();
 
-    private HashMap<String,ItemStack> usedItems;
+    private String[] SlotToItem;
 
-    private String GUIid;
+    private HashMap<String,GUIItem> usedItems;
 
-    private String GUIName;
+    private String guiAufbauId;
+
+    private String guiName;
     
     public GUIAufbau(String GUIid) throws IDIsAlreadyUsed {
         try {
-            setGUIID(GUIid);
+            setGuiID(GUIid);
         } catch (Exception e) {
             throw e;
         }
     }
 
-    public void setGUIID(String newGUIID) throws IDIsAlreadyUsed {
-        if(newGUIID == GUIid){return;} else {
-            if(usedIDs.contains(newGUIID)) {
-                throw new IDIsAlreadyUsed("The GUI ID: \""+newGUIID+"\" is already used!");
+    public void setGuiID(String newGuiID) throws IDIsAlreadyUsed {
+        if(newGuiID == guiAufbauId){return;} else {
+            if(usedIDs.contains(newGuiID)) {
+                throw new IDIsAlreadyUsed("The GUI ID: \""+newGuiID+"\" is already used!");
             } else {
 
                 try {
-                    usedIDs.remove(GUIid);
+                    usedIDs.remove(guiAufbauId);
+                    idToGUIAufbau.remove(guiAufbauId);
                 } catch(Exception e) {}
 
-                usedIDs.add(newGUIID);
-                GUIid = newGUIID;
+                idToGUIAufbau.put(guiAufbauId, this);
+                usedIDs.add(newGuiID);
+                guiAufbauId = newGuiID;
             }
         }
     } public String getGUIid() {
-        return this.GUIid;
+        return this.guiAufbauId;
     } 
 
     public void setGUIName(String newGUIName) {
-        this.GUIName = newGUIName;
+        this.guiName = newGUIName;
     } public String getGUIName() {
-        return this.GUIName;
+        return this.guiName;
     }
 
-    public void setGUIAufbau(ItemStack[] GUIAufbau) {
+    public void setGUIAufbau(String[] GUIAufbau) {
         this.SlotToItem = GUIAufbau;
-    } public ItemStack[] getGUIAufbau() {
+    } public String[] getGUIAufbau() {
         return this.SlotToItem;
     } 
+
+    public static GUIAufbau idToGuiAufbau(String ID) {
+        return idToGUIAufbau.get(ID);
+    }
+
+    public ItemStack[] getItemStackList() {
+        List<ItemStack> itemStackList = new ArrayList<ItemStack>();
+        for(int i = 0; i >= 27; i++) {
+            
+            itemStackList.add(GUIItem.idToGuiItem(this.SlotToItem[i]).getItemStack());
+        }
+
+        Object[] objectList = itemStackList.toArray();
+        ItemStack[] stringArray =  Arrays.copyOf(objectList,objectList.length,ItemStack[].class);
+
+        return stringArray;
+    }
 }
