@@ -1,4 +1,4 @@
-package de.dreimu.plugins.tjc.tiktaktoe;
+package de.dreimu.minecraft.plugins.tiktaktoe;
 
 import java.util.Arrays;
 
