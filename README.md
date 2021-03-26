@@ -1,3 +1,3 @@
 # tiktaktoe
-Ein Plugin für die Developer Bewerbung bei TheJoCraft
+Ein Plugin für die Developer Bewerbung bei TheJoCraft, 
 Vielleicht später auch mehr...
