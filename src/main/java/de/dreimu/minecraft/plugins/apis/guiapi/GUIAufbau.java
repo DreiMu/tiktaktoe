@@ -15,18 +15,27 @@ public class GUIAufbau {
 
     private String[] SlotToItem;
 
-    private HashMap<String,GUIItem> usedItems;
-
     private String guiAufbauId;
 
     private String guiName;
     
-    public GUIAufbau(String GUIid) throws IDIsAlreadyUsed {
+    public GUIAufbau(String GUIid) throws IDIsAlreadyUsed, Exception {
+
         try {
             setGuiID(GUIid);
         } catch (Exception e) {
             throw e;
         }
+    }
+
+    public GUIAufbau() {}
+
+    public static Integer usedIDsLenght() {
+        return usedIDs.size();
+    }
+
+    public static ArrayList<String> getUsedIDs() {
+        return usedIDs;
     }
 
     public void setGuiID(String newGuiID) throws IDIsAlreadyUsed {
@@ -37,12 +46,12 @@ public class GUIAufbau {
 
                 try {
                     usedIDs.remove(guiAufbauId);
-                    idToGUIAufbau.remove(guiAufbauId);
+                idToGUIAufbau.remove(guiAufbauId);
                 } catch(Exception e) {}
 
-                idToGUIAufbau.put(guiAufbauId, this);
+                idToGUIAufbau.put(newGuiID, this);
                 usedIDs.add(newGuiID);
-                guiAufbauId = newGuiID;
+                this.guiAufbauId = newGuiID;
             }
         }
     } public String getGUIid() {
@@ -65,16 +74,37 @@ public class GUIAufbau {
         return idToGUIAufbau.get(ID);
     }
 
-    public ItemStack[] getItemStackList() {
+    private static ItemStack[] StringArrayToItemStackArray(String[] StringArray) {
+
+        //System.out.println("DEBUG!");
+
         List<ItemStack> itemStackList = new ArrayList<ItemStack>();
-        for(int i = 0; i >= 27; i++) {
-            
-            itemStackList.add(GUIItem.idToGuiItem(this.SlotToItem[i]).getItemStack());
+
+        for(String temp: StringArray) {
+
+            try {
+                GUIItem guiItem = GUIItem.idToGuiItem(temp);
+                //System.out.println(temp);
+                ItemStack itemStack = guiItem.getItemStack();
+                //System.out.println(itemStack.getItemMeta().getDisplayName());
+                
+                itemStackList.add(itemStack);
+                //System.out.println(itemStack.getType());
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+
         }
 
         Object[] objectList = itemStackList.toArray();
-        ItemStack[] stringArray =  Arrays.copyOf(objectList,objectList.length,ItemStack[].class);
+        ItemStack[] stringArray = Arrays.copyOf(objectList,objectList.length,ItemStack[].class);
 
         return stringArray;
+    }
+
+    public ItemStack[] getItemStackList(String[] StringArray) {
+
+        return StringArrayToItemStackArray(StringArray);
+        
     }
 }

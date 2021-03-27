@@ -5,14 +5,17 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.event.Listener;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 public class GUIItem {
 
@@ -27,31 +30,36 @@ public class GUIItem {
     private ItemMeta guiItemMeta;
     private List<String> itemLore;
     private Material itemMaterial;
-    private GUIItemFunction guiItemFunction;
+    private GUIItemFunction guiItemFunction = new GUIItemFunction();
     private String itemFunction;
     private String[] itemFunctionInfos;
+    
 
     public GUIItem(String itemFunction, String[] itemFunctionInfos, String itemID, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) throws IDIsAlreadyUsed, FunctionDeclarationException{
+        
         try {
             setID(itemID);
-        } catch (IDIsAlreadyUsed e) {
-            throw new IDIsAlreadyUsed(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         this.itemFunctionInfos = itemFunctionInfos;
 
         try {
             this.guiItemFunction = new GUIItemFunction(itemFunctionInfos);
-        } catch (FunctionDeclarationException e) {
-            //TODO: handle exception
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+        this.guiItem = new ItemStack(guiItemMaterial);
         
+        this.itemFunction = itemFunction;
         this.itemName = itemName;
         this.enchanted = enchanted;
         this.itemMaterial = guiItemMaterial;
         this.itemLore = Arrays.asList(itemLore);
         this.guiItemMeta = this.guiItem.getItemMeta();
-        
+
     }
 
     public void setID(String newItemID) throws IDIsAlreadyUsed {
@@ -62,9 +70,11 @@ public class GUIItem {
 
                 try {
                     usedIDs.remove(this.itemID);
+                    idToItem.remove(this.itemID);
                 } catch(Exception e) {}
 
                 usedIDs.add(newItemID);
+                idToItem.put(newItemID, this);
                 this.itemID = newItemID;
             }
         }
@@ -85,6 +95,7 @@ public class GUIItem {
     }
 
     private ItemStack generateItem() {
+
         this.guiItem = new ItemStack(this.itemMaterial);
         this.guiItemMeta = this.guiItem.getItemMeta();
         this.guiItemMeta.setDisplayName(this.itemName);
@@ -94,6 +105,15 @@ public class GUIItem {
         }
 
         this.guiItemMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_DESTROYS, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_PLACED_ON, ItemFlag.HIDE_POTION_EFFECTS, ItemFlag.HIDE_UNBREAKABLE);
+
+        
+        PersistentDataContainer dataContainer = this.guiItemMeta.getPersistentDataContainer();
+        if(this.itemFunction != null) { 
+            dataContainer.set(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING, this.itemFunction);
+        } else {
+            dataContainer.set(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING, "null");
+        }
+        dataContainer.set(new NamespacedKey(GUI.plugin, "itemID"), PersistentDataType.STRING, this.itemID);
 
         this.guiItem.setItemMeta(this.guiItemMeta);
 
@@ -108,17 +128,33 @@ public class GUIItem {
         return idToItem.get(ID);
     }
 
-    public void runFunction(Player player, GUIAufbau guiAufbau, Inventory inv) {
-        switch(this.itemFunction) {
-            case "closeGUI":
+    public void runFunction(Player player, Inventory inv, int slot) {
+        player.sendMessage("runFunction");
+        PersistentDataContainer dataContainer = this.getItemStack().getItemMeta().getPersistentDataContainer();
+
+        String function = dataContainer.get(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING);
+        System.out.println(function);
+        switch(function.toLowerCase()) {
+            case "closegui":
                 this.guiItemFunction.closeGUI(player);
-            case "openGUI":
+                break;
+            case "opengui":
                 this.guiItemFunction.openGUI(player);
-            case "setItem":
-                this.guiItemFunction.setItem(inv);
-            case "setItems":
+                System.out.println("openGUI");
+                break;
+            case "setitem":
+                this.guiItemFunction.setItem(inv, slot);
+                break;
+            case "setitems":
                 this.guiItemFunction.setItems(player);
+                break;
+            default:
+                break;
         }
 
+    }
+
+    public GUIItemFunction getItemFunction() {
+        return this.guiItemFunction;
     }
 }
