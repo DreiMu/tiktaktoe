@@ -1,16 +1,16 @@
 package de.dreimu.minecraft.plugins.apis.guiapi;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
 public class GUIItemFunction {
 
-    private String[] functionInfo;
+    private String[] functionInfo = {};
 
     public GUIItemFunction(String[] functionInfo) throws FunctionDeclarationException {
         this.functionInfo = functionInfo;
-    }
+    }  public GUIItemFunction() {}
 
     public void openGUI(Player player) {
 
@@ -25,19 +25,29 @@ public class GUIItemFunction {
 
         player.getOpenInventory().close();
 
-    } public void setItem(Inventory inv) {
+    } public void setItem(Inventory inv, int slot) {
 
         //setzt ein Item
         //functionInfo = {"slot","itemID"}
 
-        inv.setItem(Integer.parseInt(this.functionInfo[0]), GUIItem.idToGuiItem(this.functionInfo[1]).getItemStack());
+        if(this.functionInfo[0] == "this") {
+
+            inv.setItem(slot, GUIItem.idToGuiItem(this.functionInfo[1]).getItemStack());
+
+        } else {
+
+            inv.setItem(Integer.parseInt(this.functionInfo[0]), GUIItem.idToGuiItem(this.functionInfo[1]).getItemStack());
+
+        }
 
     } public void setItems(Player player) {
 
         //setzt alle Items
         //functionInfo = {"guiAufbauID"}
 
-        player.getOpenInventory().getTopInventory().setContents(GUIAufbau.idToGuiAufbau(functionInfo[0]).getItemStackList());
+        player.sendMessage("message");
+
+        player.getOpenInventory().getTopInventory().setContents(GUIAufbau.idToGuiAufbau(functionInfo[0]).getItemStackList(GUIAufbau.idToGuiAufbau(functionInfo[0]).getGUIAufbau()));
 
     }
 }
