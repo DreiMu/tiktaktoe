@@ -1,7 +1,7 @@
 name: tiktaktoe
 version: "1.0-SNAPSHOT"
 author: DreiMu
-main: de.dreimu.plugins.tjc.tiktaktoe.Main
+main: de.dreimu.minecraft.plugins.tiktaktoe.Main
 api-version: 1.13
 commands:
   tiktaktoe:
