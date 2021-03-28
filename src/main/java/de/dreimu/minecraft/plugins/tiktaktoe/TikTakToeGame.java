@@ -1,6 +1,5 @@
 package de.dreimu.minecraft.plugins.tiktaktoe;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class TikTakToeGame {

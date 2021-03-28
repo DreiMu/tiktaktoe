@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -68,13 +67,13 @@ public class GUI implements Listener{
         e.setCancelled(true);
 
         final ItemStack clickedItem = e.getCurrentItem();
-        ArrayList<String> usedIDs = GUIAufbau.getUsedIDs();
+        //ArrayList<String> usedIDs = GUIAufbau.getUsedIDs();
 
         final Player player = (Player) e.getWhoClicked();
 
         try{if(e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING)) {
 
-            ItemStack item = e.getCurrentItem();
+            //ItemStack item = e.getCurrentItem();
 
             PersistentDataContainer dataContainer = e.getCurrentItem().getItemMeta().getPersistentDataContainer();
 

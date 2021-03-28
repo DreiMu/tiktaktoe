@@ -1,6 +1,5 @@
 package de.dreimu.minecraft.plugins.apis.guiapi;
 
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 

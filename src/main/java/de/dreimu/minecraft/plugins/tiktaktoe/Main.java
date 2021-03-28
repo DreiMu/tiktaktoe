@@ -14,7 +14,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import de.dreimu.minecraft.plugins.apis.guiapi.GUI;
 import de.dreimu.minecraft.plugins.apis.guiapi.GUIAufbau;
-import de.dreimu.minecraft.plugins.apis.guiapi.GUIItemFunction;
 
 public class Main extends JavaPlugin {
 
