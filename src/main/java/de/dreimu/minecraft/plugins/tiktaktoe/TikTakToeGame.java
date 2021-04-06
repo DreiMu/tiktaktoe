@@ -1,24 +1,60 @@
 package de.dreimu.minecraft.plugins.tiktaktoe;
 
 import java.util.HashMap;
+import java.util.UUID;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import de.dreimu.minecraft.plugins.apis.guiapi.GUIItem;
 
 public class TikTakToeGame {
 
+    private static HashMap<Player,TikTakToePlayer> playerToTTTPlayer = new HashMap<Player,TikTakToePlayer>();
+
+    private static HashMap<Player,UUID> playerToUUID = new HashMap<Player,UUID>();
+
+    private UUID redFieldUUID;
+    private UUID emptyFieldUUID;
+    private UUID blueFieldUUID;
+
     // Speichert zu jeder gameID das Passende TikTakToeGame ab
-    private static HashMap<String,TikTakToeGame> IdToGame = new HashMap<String,TikTakToeGame>();
+    private static HashMap<UUID,TikTakToeGame> IdToGame = new HashMap<UUID,TikTakToeGame>();
 
-    public static TikTakToeGame getGameFromID(String ID) {
-        return IdToGame.get(ID);
-    }
-
-    private String gameID;
+    // Die gameID
+    private UUID gameUUID;
 
     // Speichert den Aktiven Spieler.
     private TikTakToePlayer activePlayer;
+
+    // Wird beim erstellen eines Spiels aufgerufen.
+    public TikTakToeGame(UUID gameUUID, UUID emptyFieldUUID, UUID redFieldUUID, UUID blueFieldUUID) {
+        this.emptyFieldUUID = emptyFieldUUID;
+        this.redFieldUUID = redFieldUUID;
+        this.blueFieldUUID = blueFieldUUID;
+
+        this.gameUUID = gameUUID;
+        IdToGame.put(this.gameUUID, this);
+    }
+    
+    // Gibt das Game Objekt der angegebenen ID zurück
+    public static TikTakToeGame getGameFromID(UUID UUID) {
+        return IdToGame.get(UUID);
+    }
+
+    public static UUID getUUIDFromPlayer(Player player) {
+        return playerToUUID.get(player);
+    }
+
+    public static TikTakToePlayer getTTTPlayerFromPlayer(Player player) {
+        return playerToTTTPlayer.get(player);
+    }
+
+    // Gibt die Spieler dieses Spiels zurück
+    public Player[] getPlayers() {
+        Player[] returnArray = {player1.getPlayer(),player2.getPlayer()};
+        return returnArray;
+    }
 
     public boolean isActivePlayer(TikTakToePlayer player) {
         // Gibt aus, ob der Angegebene Spieler der Aktive Spieler ist, dh., ob dieser seinen "Stein" setzen darf, oder nicht.
@@ -41,13 +77,14 @@ public class TikTakToeGame {
         {null,null,null}
     };
 
-    // Wird beim erstellen eines Spiels aufgerufen.
-    public TikTakToeGame(String gameID) {
-        setGameID(gameID);
-    }
-
     // Setzt den Spieler 1
     public void setPlayer1(TikTakToePlayer player1) {
+        try {
+            playerToUUID.remove(this.player1.getPlayer());
+            playerToTTTPlayer.remove(this.player1.getPlayer());
+        } catch (Exception e){}
+        playerToUUID.put(player1.getPlayer(),this.gameUUID);
+        playerToTTTPlayer.put(player1.getPlayer(), player1);
         this.player1 = player1;
     } 
     
@@ -58,6 +95,12 @@ public class TikTakToeGame {
 
     // Setzt den Spieler 2
     public void setPlayer2(TikTakToePlayer player2) {
+        try {
+            playerToUUID.remove(this.player2.getPlayer());
+            playerToTTTPlayer.remove(this.player2.getPlayer());
+        } catch (Exception e){}
+        playerToUUID.put(player2.getPlayer(),this.gameUUID);
+        playerToTTTPlayer.put(player2.getPlayer(), player2);
         this.player2 = player2;
     } 
     
@@ -123,6 +166,7 @@ public class TikTakToeGame {
         return returnArray;
     }
 
+    // Gibt ein ItemStackArray aus
     public ItemStack[][] getItemStackArray(Boolean[][] verteilungsArray) {
         //trueItem kann "redGameField" oder "redGameField" sein, falseItem ist das andere.
 
@@ -135,11 +179,11 @@ public class TikTakToeGame {
 
                 //wenn das Feld im VerteilungsArray true ist, wird das GUIItem mit der ID der Variable trueItem verwendet, wenn es false ist, wird falseItem verwendet, bei keinem von beiden wird "emptyGameField" verwendet.
                 if(verteilungsArray[i][j] == true) {
-                    itemStackArray[i][j] = GUIItem.idToGuiItem("blueGameField").getItemStack();
+                    itemStackArray[i][j] = GUIItem.uuidToGuiItem(blueFieldUUID).getItemStack();
                 } else if(verteilungsArray[i][j] == false) {
-                    itemStackArray[i][j] = GUIItem.idToGuiItem("redGameField").getItemStack();
+                    itemStackArray[i][j] = GUIItem.uuidToGuiItem(redFieldUUID).getItemStack();
                 } else {
-                    itemStackArray[i][j] = GUIItem.idToGuiItem("emptyGameField").getItemStack();
+                    itemStackArray[i][j] = GUIItem.uuidToGuiItem(emptyFieldUUID).getItemStack();
                 }
             }
         }
@@ -148,9 +192,11 @@ public class TikTakToeGame {
         return itemStackArray;
     }
 
+    // Modifiziert die Verteiung und gibt ein überarbeitetes, zweidimensionales ItemStackArray aus.
     public ItemStack[][] playerClicked(TikTakToePlayer player, int slot, GUIItem hisItem) {
-        //slot = 3-5 12-14 21-23 
-        //field = 0-8
+        // Erlaubte Werte:
+        // slot = 3-5 12-14 21-23 
+        // field = 0-8
         int row = 0;
         int field = 0;
 
@@ -176,32 +222,5 @@ public class TikTakToeGame {
 
         // Gibt das Array als ItemStack Array aus.
         return this.getItemStackArray(verteilungsArray);
-    }
-
-    // Setzt die Spiel ID auf den übergebenen Wert.
-    public void setGameID(String newGameID) {
-        // Wenn die ID die vorherige ist, passiert nichts.
-        if(gameID == newGameID) {
-            return;
-
-        // Wenn die ID eine andere ist, wird überprüft, ob die neue ID schon vergeben ist.
-        } else {
-
-            // Wenn die andere ID schon vergeben ist, passiert nichts.
-            if(IdToGame.containsKey(newGameID)) {
-                return;
-
-            // Wenn es eine neue ID ist, wird versucht diese aus den Vergebenen IDs zu entfernen.
-            } else {
-                try {
-                    IdToGame.remove(gameID);
-                } catch(Exception e){}
-
-                // Die neue ID wird abgespeichert.
-                this.gameID = newGameID;
-                // Die neue ID wird in die Liste der vergebenen IDs eingetragen.
-                IdToGame.put(newGameID, this);
-            }
-        }
     }
 }

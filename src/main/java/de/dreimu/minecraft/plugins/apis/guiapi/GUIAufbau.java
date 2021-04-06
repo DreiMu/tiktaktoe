@@ -4,64 +4,64 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
+import org.bukkit.Bukkit;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+// Die Klasse GUIAufbau
 public class GUIAufbau {
 
-    private static ArrayList<String> usedIDs = new ArrayList<String>();
+    // Das Inventory des GUIAufbau
+    private Inventory inventory;
 
-    private static HashMap<String,GUIAufbau> idToGUIAufbau = new HashMap<String,GUIAufbau>();
+    // Speichert für jede ID den dazugehörigen GUIAufbau
+    private static HashMap<UUID,GUIAufbau> uuidToGUIAufbau = new HashMap<UUID,GUIAufbau>();
 
+    // Speichert eine Liste für die Items der GUI
     private String[] SlotToItem;
 
-    private String guiAufbauId;
+    // Speichert die ID
+    private UUID guiUUID;
 
+    // Speichert den Namen
     private String guiName;
     
-    public GUIAufbau(String GUIid) throws IDIsAlreadyUsed, Exception {
+    // Gibt die UUID zurück
+    public UUID getUUID() {
+        return this.guiUUID;
+    }
 
-        try {
-            setGuiID(GUIid);
-        } catch (Exception e) {
-            throw e;
+    // Gibt einen String der UUID zurück
+    public String getUUIDString() {
+        return this.guiUUID.toString();
+    }
+
+    // Gibt die angegebenen Parameter an init() weiter
+    public GUIAufbau(UUID uuid, String name){init(uuid,name);}
+    public GUIAufbau(String name){init(name);}
+
+    // Setzt this.guiUUID auf den übergebenen Wert uuid und this.guiName auf name
+    private void init(UUID uuid, String name){
+        this.guiUUID=uuid;
+        this.guiName=name;
+        uuidToGUIAufbau.put(uuid, this);
+    }
+
+    // setzt this.guiUUID auf eine zufällig generierte UUID und this.guiName auf name.
+    private void init(String name){
+        init(this.guiUUID=UUID.randomUUID(),name);
+    }
+
+    public Inventory getInventory() {
+        if(this.inventory == null) {
+            this.inventory = Bukkit.createInventory(null, 27, this.guiName);
         }
-    }
+        this.inventory.setContents(this.getItemStackArray());
+        // Gibt das Inventar der guiAnsicht zurück
+        return this.inventory;
 
-    public GUIAufbau() {}
-
-    public static Integer usedIDsLenght() {
-        return usedIDs.size();
-    }
-
-    public static ArrayList<String> getUsedIDs() {
-        return usedIDs;
-    }
-
-    public void setGuiID(String newGuiID) throws IDIsAlreadyUsed {
-        if(newGuiID == guiAufbauId){return;} else {
-            if(usedIDs.contains(newGuiID)) {
-                throw new IDIsAlreadyUsed("The GUI ID: \""+newGuiID+"\" is already used!");
-            } else {
-
-                try {
-                    usedIDs.remove(guiAufbauId);
-                idToGUIAufbau.remove(guiAufbauId);
-                } catch(Exception e) {}
-
-                idToGUIAufbau.put(newGuiID, this);
-                usedIDs.add(newGuiID);
-                this.guiAufbauId = newGuiID;
-            }
-        }
-    } public String getGUIid() {
-        return this.guiAufbauId;
-    } 
-
-    public void setGUIName(String newGUIName) {
-        this.guiName = newGUIName;
-    } public String getGUIName() {
-        return this.guiName;
     }
 
     public void setGUIAufbau(String[] GUIAufbau) {
@@ -70,8 +70,8 @@ public class GUIAufbau {
         return this.SlotToItem;
     } 
 
-    public static GUIAufbau idToGuiAufbau(String ID) {
-        return idToGUIAufbau.get(ID);
+    public static GUIAufbau idToGuiAufbau(UUID uuid) {
+        return uuidToGUIAufbau.get(uuid);
     }
 
     private static ItemStack[] StringArrayToItemStackArray(String[] StringArray) {
@@ -83,7 +83,7 @@ public class GUIAufbau {
         for(String temp: StringArray) {
 
             try {
-                GUIItem guiItem = GUIItem.idToGuiItem(temp);
+                GUIItem guiItem = GUIItem.uuidToGuiItem(UUID.fromString(temp));
                 //System.out.println(temp);
                 ItemStack itemStack = guiItem.getItemStack();
                 //System.out.println(itemStack.getItemMeta().getDisplayName());
@@ -102,9 +102,9 @@ public class GUIAufbau {
         return stringArray;
     }
 
-    public ItemStack[] getItemStackList(String[] StringArray) {
+    public ItemStack[] getItemStackArray() {
 
-        return StringArrayToItemStackArray(StringArray);
+        return StringArrayToItemStackArray(this.getGUIAufbau());
         
     }
 }

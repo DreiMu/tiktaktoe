@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -18,29 +20,27 @@ import org.bukkit.persistence.PersistentDataType;
 
 public class GUIItem {
 
-    private static ArrayList<String> usedIDs = new ArrayList<String>();
+    private static ArrayList<UUID> usedUUIDs = new ArrayList<UUID>();
 
-    private static HashMap<String,GUIItem> idToItem = new HashMap<String,GUIItem>();
+    private static HashMap<UUID,GUIItem> uuidToItem = new HashMap<UUID,GUIItem>();
 
-    private String itemID;
     private String itemName;
     private Boolean enchanted;
     private ItemStack guiItem;
     private ItemMeta guiItemMeta;
     private List<String> itemLore;
     private Material itemMaterial;
-    private GUIItemFunction guiItemFunction = new GUIItemFunction();
+    private GUIItemFunction guiItemFunction;
     private String itemFunction;
     private String[] itemFunctionInfos;
+    private UUID uuid;
     
 
-    public GUIItem(String itemFunction, String[] itemFunctionInfos, String itemID, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) throws IDIsAlreadyUsed, FunctionDeclarationException{
+    public GUIItem(String itemFunction, String[] itemFunctionInfos, UUID uuid, String itemName, Boolean enchanted, Material guiItemMaterial, String...itemLore) {
         
-        try {
-            setID(itemID);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        this.uuid = uuid;
+        usedUUIDs.add(uuid);
+        uuidToItem.put(uuid, this);
 
         this.itemFunctionInfos = itemFunctionInfos;
 
@@ -61,24 +61,14 @@ public class GUIItem {
 
     }
 
-    public void setID(String newItemID) throws IDIsAlreadyUsed {
-        if(newItemID == this.itemID){return;} else {
-            if(usedIDs.contains(newItemID)) { 
-                throw new IDIsAlreadyUsed("The Item ID: \""+newItemID+"\" is already used!");
-            } else {
+    public String[] getItemFunctionInfos() {
+        return this.itemFunctionInfos;
+    }
 
-                try {
-                    usedIDs.remove(this.itemID);
-                    idToItem.remove(this.itemID);
-                } catch(Exception e) {}
-
-                usedIDs.add(newItemID);
-                idToItem.put(newItemID, this);
-                this.itemID = newItemID;
-            }
-        }
-    } public String getID() {
-        return this.itemID;
+    public UUID getUUID() {
+        return this.uuid;
+    } public String getUUIDString() {
+        return this.uuid.toString();
     }
 
     public void setName(String itemName) {
@@ -112,7 +102,7 @@ public class GUIItem {
         } else {
             dataContainer.set(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING, "null");
         }
-        dataContainer.set(new NamespacedKey(GUI.plugin, "itemID"), PersistentDataType.STRING, this.itemID);
+        dataContainer.set(new NamespacedKey(GUI.plugin, "itemUUID"), PersistentDataType.STRING, this.getUUIDString());
 
         this.guiItem.setItemMeta(this.guiItemMeta);
 
@@ -123,12 +113,21 @@ public class GUIItem {
         return this.generateItem();
     }
 
-    public static GUIItem idToGuiItem(String ID) {
-        return idToItem.get(ID);
+    public static GUIItem uuidToGuiItem(UUID uuid) {
+        return uuidToItem.get(uuid);
     }
 
-    public void runFunction(Player player, Inventory inv, int slot) {
-        player.sendMessage("runFunction");
+    public void runFunction(InventoryClickEvent e, GUI plugin) {
+
+        // TODO: remove debug
+        System.out.println("runFunction");
+
+        final Player player; player = (Player) e.getWhoClicked();
+
+        int slot = e.getRawSlot();
+
+        Inventory inv = e.getClickedInventory();
+
         PersistentDataContainer dataContainer = this.getItemStack().getItemMeta().getPersistentDataContainer();
 
         String function = dataContainer.get(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING);
@@ -139,7 +138,6 @@ public class GUIItem {
                 break;
             case "opengui":
                 this.guiItemFunction.openGUI(player);
-                System.out.println("openGUI");
                 break;
             case "setitem":
                 this.guiItemFunction.setItem(inv, slot);
@@ -147,7 +145,11 @@ public class GUIItem {
             case "setitems":
                 this.guiItemFunction.setItems(player);
                 break;
+            case "customfunction":
+                this.guiItemFunction.customFunction(e, player, inv, slot, plugin);
+                break;
             default:
+                System.out.println("default");
                 break;
         }
 
