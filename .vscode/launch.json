@@ -6,12 +6,26 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch Test",
+            "request": "launch",
+            "mainClass": "de.dreimu.minecraft.plugins.apis.guiapi.Test",
+            "projectName": "tiktaktoe"
+        },
+        {
+            "type": "java",
+            "name": "Launch External Terminal",
+            "request": "launch",
+            "console": "externalTerminal",
+            "mainClass": ""
+        },
+        {
+            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
         },
         {
-            "type":"java",
+            "type": "java",
             "name": "Debug Server",
             "request": "attach",
             "hostName": "localhost",
