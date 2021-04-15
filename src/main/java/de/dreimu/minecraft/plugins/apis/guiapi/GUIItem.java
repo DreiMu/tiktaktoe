@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -46,14 +47,14 @@ public class GUIItem {
 
         try {
             this.guiItemFunction = new GUIItemFunction(itemFunctionInfos);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) {}
 
         this.guiItem = new ItemStack(guiItemMaterial);
+
+        String nameWithColor = ChatColor.translateAlternateColorCodes('§', itemName);
         
         this.itemFunction = itemFunction;
-        this.itemName = itemName;
+        this.itemName = nameWithColor;
         this.enchanted = enchanted;
         this.itemMaterial = guiItemMaterial;
         this.itemLore = Arrays.asList(itemLore);
@@ -119,9 +120,6 @@ public class GUIItem {
 
     public void runFunction(InventoryClickEvent e, GUI plugin) {
 
-        // TODO: remove debug
-        System.out.println("runFunction");
-
         final Player player; player = (Player) e.getWhoClicked();
 
         int slot = e.getRawSlot();
@@ -131,13 +129,15 @@ public class GUIItem {
         PersistentDataContainer dataContainer = this.getItemStack().getItemMeta().getPersistentDataContainer();
 
         String function = dataContainer.get(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING);
-        System.out.println(function);
         switch(function.toLowerCase()) {
             case "closegui":
                 this.guiItemFunction.closeGUI(player);
                 break;
             case "opengui":
                 this.guiItemFunction.openGUI(player);
+                break;
+            case "openguiaufbau":
+                this.guiItemFunction.openGUIAufbau(player);
                 break;
             case "setitem":
                 this.guiItemFunction.setItem(inv, slot);
@@ -149,7 +149,6 @@ public class GUIItem {
                 this.guiItemFunction.customFunction(e, player, inv, slot, plugin);
                 break;
             default:
-                System.out.println("default");
                 break;
         }
 

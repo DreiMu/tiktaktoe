@@ -5,6 +5,9 @@ import java.util.UUID;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.plugin.Plugin;
+
+import de.dreimu.minecraft.plugins.tiktaktoe.Main;
 
 public class GUIItemFunction {
 
@@ -21,6 +24,14 @@ public class GUIItemFunction {
 
         player.openInventory(GUI.getInventoryFromID(this.functionInfo[0]));
         
+    } public void openGUIAufbau(Player player) {
+
+        // Öffnet den angegebenen GUIAufbau
+
+        Main main = (Main)  GUI.plugin;
+
+        player.openInventory(main.getGUI().getInventory(UUID.fromString(this.functionInfo[0]),player));
+
     } public void closeGUI(Player player) {
 
         //schließt die GUI
@@ -43,21 +54,15 @@ public class GUIItemFunction {
         }
 
     } public void setItems(Player player) {
-        
-                // TODO: remove Debug
-                System.out.println("x");
 
         //setzt alle Items
         //functionInfo = {"guiAufbauID"}
-
-        player.sendMessage("message");
 
         player.getOpenInventory().getTopInventory().setContents(GUIAufbau.idToGuiAufbau(UUID.fromString(functionInfo[0])).getItemStackArray());
 
     } public void customFunction(InventoryClickEvent e, Player player, Inventory inv, int slot, GUI plugin) {
         {
             plugin.slotWasClicked(e, player, inv, slot, plugin);
-            
         }
     }
 }

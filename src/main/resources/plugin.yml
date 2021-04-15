@@ -2,8 +2,4 @@ name: tiktaktoe
 version: "1.0-SNAPSHOT"
 author: DreiMu
 main: de.dreimu.minecraft.plugins.tiktaktoe.Main
-api-version: 1.13
-commands:
-  tiktaktoe:
-    description: Spiele TikTakToe!
-    usage: /tiktaktoe [startgame|joingame] [<ID>|True|False]
+api-version: 1.15

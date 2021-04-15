@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -14,7 +15,7 @@ import org.bukkit.inventory.ItemStack;
 public class GUIAufbau {
 
     // Das Inventory des GUIAufbau
-    private Inventory inventory;
+    private HashMap<Player,Inventory> playerToInventory = new HashMap<Player,Inventory>();
 
     // Speichert für jede ID den dazugehörigen GUIAufbau
     private static HashMap<UUID,GUIAufbau> uuidToGUIAufbau = new HashMap<UUID,GUIAufbau>();
@@ -54,13 +55,14 @@ public class GUIAufbau {
         init(this.guiUUID=UUID.randomUUID(),name);
     }
 
-    public Inventory getInventory() {
-        if(this.inventory == null) {
-            this.inventory = Bukkit.createInventory(null, 27, this.guiName);
+    public Inventory getInventory(Player player) {
+        if(!this.playerToInventory.containsKey(player)) {
+            this.playerToInventory.put(player, Bukkit.createInventory(player, 27, this.guiName));
         }
-        this.inventory.setContents(this.getItemStackArray());
+        this.playerToInventory.get(player).setContents(this.getItemStackArray());
         // Gibt das Inventar der guiAnsicht zurück
-        return this.inventory;
+
+        return this.playerToInventory.get(player);
 
     }
 
@@ -76,22 +78,18 @@ public class GUIAufbau {
 
     private static ItemStack[] StringArrayToItemStackArray(String[] StringArray) {
 
-        //System.out.println("DEBUG!");
-
         List<ItemStack> itemStackList = new ArrayList<ItemStack>();
 
         for(String temp: StringArray) {
 
             try {
                 GUIItem guiItem = GUIItem.uuidToGuiItem(UUID.fromString(temp));
-                //System.out.println(temp);
+                
                 ItemStack itemStack = guiItem.getItemStack();
-                //System.out.println(itemStack.getItemMeta().getDisplayName());
                 
                 itemStackList.add(itemStack);
-                //System.out.println(itemStack.getType());
             } catch(Exception e) {
-                e.printStackTrace();
+                itemStackList.add(null);
             }
 
         }

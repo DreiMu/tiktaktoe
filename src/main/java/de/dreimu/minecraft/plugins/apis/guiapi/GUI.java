@@ -8,6 +8,8 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,6 +25,8 @@ import org.bukkit.plugin.Plugin;
 
 // Die Klasse GUI
 public class GUI implements Listener {
+
+    private ArrayList<Player> playersWhoUsedGUI = new ArrayList<Player>();
 
     // Ein Array aller Inventare
     private ArrayList<Inventory> inventoryArray = new ArrayList<Inventory>();
@@ -46,15 +50,13 @@ public class GUI implements Listener {
     public static Plugin plugin;
 
     // Eine HashMap in der Für jeden Spieler die Letzte geöffnete GUI Gespeichert wird, sodass sie mit einem Resume Command angezeigt werden kann
-    private HashMap<Player,ItemStack[]> playerToLatestOpenedGUI = new HashMap<Player,ItemStack[]>();
+    private HashMap<Player,Inventory> playerToLatestOpenedInventory = new HashMap<Player,Inventory>();
 
     // Getter für playerToLatestOpenedGUI
     public ItemStack[] getLatestItemStackArray(Player player){
-        // TODO: remove DEBUG
-        // DEBUG
-        System.out.println(playerToLatestOpenedGUI.get(player) );
+
         // Gibt das inventar aus.
-        return playerToLatestOpenedGUI.get(player);
+        return playerToLatestOpenedInventory.get(player).getContents();
     } 
 
     // Die Initiatoren
@@ -90,7 +92,6 @@ public class GUI implements Listener {
 
         // Das ItemStackArray wird in itemStackArray gespeichert. 
         itemStackArray = guiAufbau.getItemStackArray();
-        System.out.println(itemStackArray[26].getItemMeta().getDisplayName());
 
         // Der Inhalt des Inventars wird auf den Standard GUI Aufbau gesetzt.
         Inventory inventory = this.standardInventory;
@@ -106,20 +107,33 @@ public class GUI implements Listener {
     // Die Funktion zum Anzeigen des Inventars / der GUI
     public InventoryView openGui(Player player, UUID guiUUID) {
         // Das Inventar wird dem übergebenen Spieler angezeigt.
-        return player.openInventory(GUIAufbau.idToGuiAufbau(guiUUID).getInventory());
+        this.playersWhoUsedGUI.add(player);
+        Inventory inv = this.getInventory(guiUUID, player);
+        if(!this.inventoryArray.contains(inv)) {
+            this.inventoryArray.add(inv);
+        }
+        return player.openInventory(inv);
     }
 
     // Die Funktion zum Anzeigen des zuletzt geöffneten Inventars.
     public InventoryView resume(Player player) throws Exception {
         try {
-            Inventory inventory = this.standardInventory;
-            inventory.setContents(playerToLatestOpenedGUI.get(player));
-            inventoryArray.add(inventory);
-
-            return player.openInventory(inventory);
+            return player.openInventory(getLatestOpenedInventory(player));
         } catch(Exception e) {
             throw e;
         }
+    }
+
+    public Inventory getLatestOpenedInventory(Player player) {
+        return this.playerToLatestOpenedInventory.get(player);
+    }
+
+    public void closeAllInventorys() {
+        this.playersWhoUsedGUI.forEach(player -> {
+            if(this.inventoryIsGUI(player.getOpenInventory().getTopInventory())) {
+                player.closeInventory();
+            }
+        });
     }
 
     // Wird aufgerufen, sobald ein Slot im Inventar gedrückt wird
@@ -127,7 +141,7 @@ public class GUI implements Listener {
     public void onInventoryClick(InventoryClickEvent e) {
 
         // Wenn das angeklickte Inventar nicht in der Liste der GUIs ist, wird das Event ignoriert
-        if (!this.inventoryArray.contains(e.getInventory())) return;
+        if (!this.inventoryIsGUI(e.getClickedInventory())) return;
 
         // Wenn das Event in einem GUI Inventar passiert, wird das Ziehen des Items abgebrochen.
         e.setCancelled(true);
@@ -137,6 +151,9 @@ public class GUI implements Listener {
 
         // Der Spiieler, der das Item angeklickt hat, wird abgespeichert.
         Player player = (Player) e.getWhoClicked();
+        
+        // Spielt einen Klick Ton an
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, SoundCategory.MASTER, (float) 1.0, (float) 0.5);
 
         // Wenn das Item den NBT Tag function des Plugins hat, wird diese Funktion aufgerufen
         try{if(e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(GUI.plugin, "function"), PersistentDataType.STRING)) {
@@ -149,7 +166,6 @@ public class GUI implements Listener {
         }} catch(Exception exception){}
 
         // Wenn das Item nicht Luft oder gar kein Item ist, wird dem Spieler eine Nachricht geschickt, in der Itemname ist.
-        if (!(clickedItem == null || clickedItem.getType() == Material.AIR)) player.sendMessage("Item: " + e.getCurrentItem().getItemMeta().getDisplayName());
     }
 
 
@@ -166,14 +182,13 @@ public class GUI implements Listener {
         // Wenn das Inventar eine GUI ist und das Inventar von einem Player geschlossen wurde, wird das Inventar zusammen mit dem Spieler in playerToLatestOpenedGUI abgespeichert.
         if (this.inventoryArray.contains(e.getInventory()) && player instanceof Player) {
             // Das Inventar wird zusammen mit dem Spieler in playerToLatestOpenedGUI abgespeichert
-            playerToLatestOpenedGUI.put(player, e.getInventory().getContents());
+            playerToLatestOpenedInventory.put(player, e.getInventory());
         }
     }
 
     // Fügt einen neuen GUIAufbau der Liste und dem Array guiAufbauList beziehungsweise inventoryArray hinzu.
     public void addGUIAufbau(UUID guiAufbauUUID) {
         this.guiAufbauList.add(GUIAufbau.idToGuiAufbau(guiAufbauUUID));
-        this.inventoryArray.add(GUIAufbau.idToGuiAufbau(guiAufbauUUID).getInventory());
     }
 
     // Fügt einen Neuen Listener hinzu.
@@ -231,5 +246,17 @@ public class GUI implements Listener {
                 listener.slotWasClicked(e, player, inv, slot, plugin);
             }
         }
+    }
+
+    public Plugin getMain() {
+        return plugin;
+    }
+
+    public Inventory getInventory(UUID aufbauUUID, Player player) {
+        Inventory inv = GUIAufbau.idToGuiAufbau(aufbauUUID).getInventory(player);
+        if(!this.inventoryArray.contains(inv)) {
+            this.inventoryArray.add(inv);
+        }
+        return GUIAufbau.idToGuiAufbau(aufbauUUID).getInventory(player);
     }
 }
